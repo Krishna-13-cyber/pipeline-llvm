@@ -1,0 +1,41 @@
+! RUN: %python %S/test_errors.py %s %flang_fc1
+module m
+  interface
+    attributes(device) subroutine exts1
+    end
+  end interface
+ contains
+  recursive attributes(device) subroutine s1 ! ok
+  end
+  pure attributes(device) subroutine s2 ! ok
+  end
+  elemental attributes(device) subroutine s3 ! ok
+  end
+  subroutine s4
+   contains
+    !ERROR: A device subprogram may not be an internal subprogram
+    attributes(device) subroutine inner
+    end
+  end
+  attributes(device) subroutine s5 ! nvfortran crashes on this one
+   contains
+    !ERROR: 'inner' may not be an internal procedure of CUDA device subprogram 's5'
+    subroutine inner
+    end
+  end
+  attributes(device) subroutine s6
+    stmtfunc(x) = x + 1. ! ok
+  end
+  !ERROR: A function may not have ATTRIBUTES(GLOBAL) or ATTRIBUTES(GRID_GLOBAL)
+  attributes(global) real function f1
+  end
+  recursive attributes(global) subroutine s7 ! ok
+  end
+  pure attributes(global) subroutine s8 ! ok
+  end
+  elemental attributes(global) subroutine s9 ! ok
+  end
+end
+
+attributes(device) subroutine exts1
+end
